@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isMember(code) {
+      let r = get(/databases/$(database)/documents/rooms/$(code)).data;
+      return signedIn() && (r.a == request.auth.uid || ('b' in r && r.b == request.auth.uid));
+    }
+    match /rooms/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.a == request.auth.uid;
+      allow update: if signedIn() && (
+        resource.data.a == request.auth.uid ||
+        ('b' in resource.data && resource.data.b == request.auth.uid) ||
+        (!('b' in resource.data) && request.resource.data.b == request.auth.uid
+          && request.resource.data.a == resource.data.a));
+      match /{sub}/{docId} {
+        allow read, write: if isMember(code);
+      }
+    }
+    match /data/users/{userId}/{rest=**} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+  }
+}
