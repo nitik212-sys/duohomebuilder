@@ -70,6 +70,7 @@ canvas{width:100%;height:auto;display:block;border:3px solid var(--line);border-
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,collection,getDoc,setDoc,deleteDoc,addDoc,onSnapshot,query,orderBy,limit,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getAnalytics, isSupported} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
 // 1) Paste your Firebase web app config here (see README.md). It is safe to publish; your Firestore rules protect the data.
 const firebaseConfig = {
@@ -98,6 +99,9 @@ const fsdb={doc:p=>docRef(doc(fs,p)),collection:colRef};
 async function setupFirebase(){
   if(firebaseConfig.apiKey.startsWith("PASTE"))return null;
   const app=initializeApp(firebaseConfig),auth=getAuth(app);
+  if (await isSupported()) {
+  getAnalytics(app);
+}
   fs=getFirestore(app);
   await signInAnonymously(auth);
   return{db:fsdb,uid:auth.currentUser.uid};
